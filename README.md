@@ -1,3 +1,3 @@
 # lenslocked
 
-Photos app
+Photos application
