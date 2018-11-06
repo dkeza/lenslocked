@@ -10,7 +10,8 @@
   <body>
     {{ template "navbar" }}
     <div class="container-fluid">
-      {{template "yield" .Yield}}
+      {{ template "yield" .Yield }}
+      {{ template "footer" }}
     </div>
 
     <!-- jquery & Bootstrap JS -->
