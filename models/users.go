@@ -17,6 +17,21 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 		return nil, err
 	}
 	db.LogMode(true)
+
+	// Auto migrate
+	//db.DropTableIfExists(&User{})
+	//db.AutoMigrate(&User{})
+
+	// Insert record into users table
+	// u := User{
+	// 	Name:  "Pera",
+	// 	Email: "pera@email.com",
+	// }
+
+	// if err = db.Create(&u).Error; err != nil {
+	// 	panic(err)
+	// }
+
 	return &UserService{
 		db: db,
 	}, nil

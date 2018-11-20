@@ -25,7 +25,7 @@ func main() {
 	}
 	defer us.Close()
 
-	user, err := us.ByID(111)
+	user, err := us.ByID(1)
 	if err != nil {
 		panic(err)
 	}
