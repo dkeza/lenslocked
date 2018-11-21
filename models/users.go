@@ -11,6 +11,8 @@ import (
 var (
 	// ErrorNotFound is default record not found error
 	ErrorNotFound = errors.New("models: resource not found")
+	// ErrorInvalidID is invalid id
+	ErrorInvalidID = errors.New("models: invalid ID")
 )
 
 // NewUserService creates new user service
@@ -34,20 +36,44 @@ type UserService struct {
 // ByID finds user
 func (us *UserService) ByID(id uint) (*User, error) {
 	var user User
-	err := us.db.Where("id = ?", id).First(&user).Error
-	switch err {
-	case nil:
-		return &user, nil
-	case gorm.ErrRecordNotFound:
-		return nil, ErrorNotFound
-	default:
-		return nil, err
+	db := us.db.Where("id = ?", id)
+	err := first(db, &user)
+	return &user, err
+}
+
+// ByEmail finds user by email
+func (us *UserService) ByEmail(email string) (*User, error) {
+	var user User
+	db := us.db.Where("email = ?", email)
+	err := first(db, &user)
+	return &user, err
+}
+
+func first(db *gorm.DB, dst interface{}) error {
+	err := db.First(dst).Error
+	if err == gorm.ErrRecordNotFound {
+		return ErrorNotFound
 	}
+	return err
 }
 
 // Create new user
 func (us *UserService) Create(user *User) error {
 	return us.db.Create(user).Error
+}
+
+// Update user
+func (us *UserService) Update(user *User) error {
+	return us.db.Save(user).Error
+}
+
+// Delete user
+func (us *UserService) Delete(id uint) error {
+	if id == 0 {
+		return ErrorInvalidID
+	}
+	user := User{Model: gorm.Model{ID: id}}
+	return us.db.Delete(&user).Error
 }
 
 // Close database connection
