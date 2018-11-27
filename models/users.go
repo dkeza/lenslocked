@@ -15,6 +15,8 @@ var (
 	ErrorNotFound = errors.New("models: resource not found")
 	// ErrorInvalidID is invalid id
 	ErrorInvalidID = errors.New("models: invalid ID")
+	// ErrorInvalidPassword error
+	ErrorInvalidPassword = errors.New("models: incorrect password provided")
 )
 
 const usPasswordPepper = "some-secret"
@@ -51,6 +53,21 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	db := us.db.Where("email = ?", email)
 	err := first(db, &user)
 	return &user, err
+}
+
+// Authenticate authenticates user
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	userFound, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(userFound.PasswordHash), []byte(password+usPasswordPepper))
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		return nil, ErrorInvalidPassword
+	} else if err != nil {
+		return nil, err
+	}
+	return userFound, nil
 }
 
 func first(db *gorm.DB, dst interface{}) error {
