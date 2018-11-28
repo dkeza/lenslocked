@@ -15,7 +15,7 @@ func NewUsers(us *models.UserService) *Users {
 	}
 }
 
-// Users
+// Users controller
 type Users struct {
 	NewView   *views.View
 	LoginView *views.View
@@ -52,7 +52,8 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, user)
+	signIn(w, &user)
+	http.Redirect(w, r, "/cookietest", http.StatusFound)
 }
 
 // Show shows login form
@@ -86,11 +87,25 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	signIn(w, user)
+	http.Redirect(w, r, "/cookietest", http.StatusFound)
+}
 
+func signIn(w http.ResponseWriter, user *models.User) {
 	cookie := &http.Cookie{
 		Name:  "email",
 		Value: user.Email,
 	}
 	http.SetCookie(w, cookie)
-	fmt.Fprintln(w, user)
+}
+
+// CookieTest displays cookie
+func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("email")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	cookievalue := cookie.Value
+	fmt.Fprintln(w, cookievalue)
 }
