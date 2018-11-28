@@ -83,10 +83,14 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, "Invalid password.")
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-
 		}
 		return
 	}
 
+	cookie := &http.Cookie{
+		Name:  "email",
+		Value: user.Email,
+	}
+	http.SetCookie(w, cookie)
 	fmt.Fprintln(w, user)
 }
