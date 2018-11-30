@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"lenslocked/hash"
+	"lenslocked/rand"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -20,6 +22,7 @@ var (
 )
 
 const usPasswordPepper = "some-secret"
+const hmacSecretKey = "hmac-secret"
 
 // NewUserService creates new user service
 func NewUserService(connectionInfo string) (*UserService, error) {
@@ -28,15 +31,17 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 		return nil, err
 	}
 	db.LogMode(true)
-
+	hmac := hash.NewHMAC(hmacSecretKey)
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
 }
 
 // UserService to access users
 type UserService struct {
-	db *gorm.DB
+	db   *gorm.DB
+	hmac hash.HMAC
 }
 
 // ByID finds user
@@ -70,6 +75,17 @@ func (us *UserService) Authenticate(email, password string) (*User, error) {
 	return userFound, nil
 }
 
+// ByRemember finds user by token
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	rememberHash := us.hmac.Hash(token)
+	err := first(us.db.Where("remember_hash = ?", rememberHash), &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, err
+}
+
 func first(db *gorm.DB, dst interface{}) error {
 	err := db.First(dst).Error
 	if err == gorm.ErrRecordNotFound {
@@ -87,11 +103,23 @@ func (us *UserService) Create(user *User) error {
 	}
 	user.PasswordHash = string(hashedBytes)
 	user.Password = ""
+
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+	user.RememberHash = us.hmac.Hash(user.Remember)
 	return us.db.Create(user).Error
 }
 
 // Update user
 func (us *UserService) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = us.hmac.Hash(user.Remember)
+	}
 	return us.db.Save(user).Error
 }
 
@@ -132,4 +160,6 @@ type User struct {
 	Email        string `gorm:"not null;unique_index"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gorm:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null;unique_index"`
 }
