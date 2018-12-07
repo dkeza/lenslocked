@@ -85,9 +85,7 @@ func NewUserService(connectionInfo string) (UserService, error) {
 		UserDB: ug,
 	}
 	return &userService{
-		UserDB: &userValidator{
-			UserDB: uv,
-		},
+		UserDB: uv,
 	}, nil
 }
 
@@ -118,7 +116,7 @@ type userValidator struct {
 // ByRemember will hash remember token
 func (uv *userValidator) ByRemember(token string) (*User, error) {
 	rememberHash := uv.hmac.Hash(token)
-	return uv.ByRemember(rememberHash)
+	return uv.UserDB.ByRemember(rememberHash)
 }
 
 // Create new user
