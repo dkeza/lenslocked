@@ -40,6 +40,7 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 
+	fmt.Println("Server is listening on port 3000")
 	http.ListenAndServe(":3000", r)
 }
 
