@@ -4,6 +4,7 @@ import (
 	"errors"
 	"lenslocked/hash"
 	"lenslocked/rand"
+	"strings"
 
 	"github.com/jinzhu/gorm" // Import postgres driver
 	// Initialize postgres driver
@@ -115,6 +116,17 @@ type userValidator struct {
 	hmac hash.HMAC
 }
 
+// ByEmail will normalize E-Mail address
+func (uv *userValidator) ByEmail(email string) (*User, error) {
+	user := User{
+		Email: email,
+	}
+	if err := runUserValFuncs(&user, uv.normalizeEmail); err != nil {
+		return nil, err
+	}
+	return uv.UserDB.ByEmail(user.Email)
+}
+
 // ByRemember will hash remember token
 func (uv *userValidator) ByRemember(token string) (*User, error) {
 	user := User{
@@ -128,7 +140,12 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 
 // Create new user
 func (uv *userValidator) Create(user *User) error {
-	err := runUserValFuncs(user, uv.bcryptPassword, uv.setRememberIfUnset, uv.hmacRemember)
+	err := runUserValFuncs(user,
+		uv.bcryptPassword,
+		uv.setRememberIfUnset,
+		uv.hmacRemember,
+		uv.normalizeEmail,
+	)
 	if err != nil {
 		return err
 	}
@@ -138,7 +155,11 @@ func (uv *userValidator) Create(user *User) error {
 
 // Update will hash a remember token if it is provided.
 func (uv *userValidator) Update(user *User) error {
-	err := runUserValFuncs(user, uv.bcryptPassword, uv.hmacRemember)
+	err := runUserValFuncs(user,
+		uv.bcryptPassword,
+		uv.hmacRemember,
+		uv.normalizeEmail,
+	)
 	if err != nil {
 		return err
 	}
@@ -201,6 +222,12 @@ func (uv *userValidator) idGreaterThan(n uint) userValFunc {
 		}
 		return nil
 	})
+}
+
+func (uv *userValidator) normalizeEmail(user *User) error {
+	user.Email = strings.ToLower(user.Email)
+	user.Email = strings.TrimSpace(user.Email)
+	return nil
 }
 
 var _ UserDB = &userGorm{}
