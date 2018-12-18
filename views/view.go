@@ -43,7 +43,7 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Render the view with predefined layout
 func (v *View) Render(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html")
-	return v.Template.ExecuteTemplate(w, v.Layout, nil)
+	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
 func layoutFiles() []string {
