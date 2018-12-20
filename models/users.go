@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"lenslocked/hash"
 	"lenslocked/rand"
 	"regexp"
@@ -11,29 +10,6 @@ import (
 	// Initialize postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	// ErrorNotFound is default record not found error
-	ErrorNotFound = errors.New("models: resource not found")
-	// ErrIDInvalid is invalid id
-	ErrIDInvalid = errors.New("models: invalid ID")
-	// ErrorPasswordIncorrect error
-	ErrorPasswordIncorrect = errors.New("models: incorrect password provided")
-	// ErrEmailRequired returns error when E-Mail address is not provided
-	ErrEmailRequired = errors.New("models: email address is required")
-	// ErrEmailInvalid returns error when rmail is invalid
-	ErrEmailInvalid = errors.New("models: email address is not valid")
-	// ErrEmailTaken returns error
-	ErrEmailTaken = errors.New("models: email address is already taken")
-	//ErrPasswordTooShort returns error
-	ErrPasswordTooShort = errors.New("models: password must be minimum 8 characters long")
-	// ErrRememberRequired returns error
-	ErrRememberRequired = errors.New("models: remember token is required")
-	//ErrPasswordRequired returns error
-	ErrPasswordRequired = errors.New("models: password is required")
-	// ErrRememberTooShort returns error
-	ErrRememberTooShort = errors.New("models: remember token must be at least 32 bytes")
 )
 
 const usPasswordPepper = "some-secret"
