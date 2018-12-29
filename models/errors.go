@@ -17,12 +17,16 @@ const (
 	ErrEmailTaken modelError = "models: email address is already taken"
 	//ErrPasswordTooShort returns error
 	ErrPasswordTooShort modelError = "models: password must be minimum 8 characters long"
-	// ErrRememberRequired returns error
-	ErrRememberRequired modelError = "models: remember token is required"
 	//ErrPasswordRequired returns error
 	ErrPasswordRequired modelError = "models: password is required"
+	// ErrTitleRequired returns error
+	ErrTitleRequired modelError = "models: title is required"
+	// ErrRememberRequired returns error
+	ErrRememberRequired privateError = "models: remember token is required"
 	// ErrRememberTooShort returns error
-	ErrRememberTooShort modelError = "models: remember token must be at least 32 bytes"
+	ErrRememberTooShort privateError = "models: remember token must be at least 32 bytes"
+	// ErrUserIDRequired returns error
+	ErrUserIDRequired privateError = "models: user ID is required"
 )
 
 type modelError string
@@ -36,4 +40,10 @@ func (e modelError) Public() string {
 	split := strings.Split(s, " ")
 	split[0] = strings.Title(split[0])
 	return strings.Join(split, " ")
+}
+
+type privateError string
+
+func (e privateError) Error() string {
+	return string(e)
 }
