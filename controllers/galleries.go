@@ -48,7 +48,7 @@ func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	vd.Yield = galleries
 	//fmt.Fprintln(w, galleries)
-	g.IndexView.Render(w, vd)
+	g.IndexView.Render(w, r, vd)
 }
 
 // GET /galleries/:id
@@ -60,7 +60,7 @@ func (g *Galleries) Show(w http.ResponseWriter, r *http.Request) {
 
 	var vd views.Data
 	vd.Yield = gallery
-	g.ShowView.Render(w, vd)
+	g.ShowView.Render(w, r, vd)
 }
 
 // GET /galleries/:id/edit
@@ -76,7 +76,7 @@ func (g *Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 	var vd views.Data
 	vd.Yield = gallery
-	g.EditView.Render(w, vd)
+	g.EditView.Render(w, r, vd)
 }
 
 // POST /galleries/:id/update
@@ -97,14 +97,14 @@ func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
 		vd.SetAlert(err)
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 	gallery.Title = form.Title
 	err = g.gs.Update(gallery)
 	if err != nil {
 		vd.SetAlert(err)
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
 		Level:   views.AlertLvlSuccess,
 		Message: "Gallery updated",
 	}
-	g.EditView.Render(w, vd)
+	g.EditView.Render(w, r, vd)
 }
 
 // POST /galleries
@@ -123,7 +123,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
 		vd.SetAlert(err)
-		g.New.Render(w, vd)
+		g.New.Render(w, r, vd)
 		return
 	}
 
@@ -138,7 +138,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := g.gs.Create(&gallery); err != nil {
 		vd.SetAlert(err)
-		g.New.Render(w, vd)
+		g.New.Render(w, r, vd)
 		return
 	}
 	url, err := g.r.Get("index_gallery").URL("id", fmt.Sprintf("%v", gallery.ID))
@@ -164,7 +164,7 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		vd.SetAlert(err)
 		vd.Yield = gallery
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 	http.Redirect(w, r, "/galleries", http.StatusFound)
