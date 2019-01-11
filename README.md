@@ -1,5 +1,3 @@
 # lenslocked
 
 Photos application
-
-Photos
