@@ -2,4 +2,4 @@
 
 Photos application
 
-Photos galleries
+Photos
