@@ -1,3 +1,3 @@
-# lenslocked
+# Simple Gallery App
 
 Photos application
