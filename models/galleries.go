@@ -111,7 +111,10 @@ func (gg *galleryGorm) ByID(id uint) (*Gallery, error) {
 
 func (gg *galleryGorm) ByUserID(userID uint) ([]Gallery, error) {
 	var galeries []Gallery
-	gg.db.Where("user_id = ?", userID).Find(&galeries)
+	err := gg.db.Where("user_id = ?", userID).Find(&galeries).Error
+	if err != nil {
+		return nil, err
+	}
 	return galeries, nil
 }
 

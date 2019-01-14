@@ -2,6 +2,7 @@ package views
 
 import (
 	"lenslocked/models"
+	"log"
 )
 
 const (
@@ -31,6 +32,7 @@ func (d *Data) SetAlert(err error) {
 			Message: pErr.Public(),
 		}
 	} else {
+		log.Println(err)
 		d.Alert = &Alert{
 			Level:   AlertLvlError,
 			Message: AlertMsgGeneric,
