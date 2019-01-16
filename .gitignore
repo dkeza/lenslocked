@@ -1,6 +1,7 @@
-lenslocked
+simplegallery
 runner-build
 *.exe
 debug
 launch.json
 images
+vendor
