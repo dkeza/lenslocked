@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"simplegallery/controllers"
 	"simplegallery/middleware"
 	"simplegallery/models"
@@ -21,8 +22,14 @@ const (
 )
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	psqlInfo := os.Getenv("DATABASE_URL")
+	if len(psqlInfo) == 0 {
+		psqlInfo = fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", user, password, host, port, dbname)
+	}
+	serverPort := os.Getenv("PORT")
+	if len(serverPort) == 0 {
+		serverPort = "3333"
+	}
 
 	services, err := models.NewServices(psqlInfo)
 	must(err)
@@ -75,8 +82,8 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(galleriesC.ImageDelete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name("show_gallery")
 
-	fmt.Println("Server is listening on port 3333")
-	http.ListenAndServe(":3333", csrfMw(userMw.Apply(r)))
+	fmt.Println("Server is listening on port " + serverPort)
+	http.ListenAndServe(":"+serverPort, csrfMw(userMw.Apply(r)))
 }
 
 func must(err error) {
