@@ -5,8 +5,10 @@ import (
 	"lenslocked/controllers"
 	"lenslocked/middleware"
 	"lenslocked/models"
+	"lenslocked/rand"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 )
 
@@ -33,6 +35,11 @@ func main() {
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
+
+	isProd := false
+	b, err := rand.Bytes(32)
+	must(err)
+	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
 
 	userMw := middleware.User{
 		UserService: services.User,
@@ -69,7 +76,7 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name("show_gallery")
 
 	fmt.Println("Server is listening on port 3333")
-	http.ListenAndServe(":3333", userMw.Apply(r))
+	http.ListenAndServe(":3333", csrfMw(userMw.Apply(r)))
 }
 
 func must(err error) {
