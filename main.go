@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"lenslocked/controllers"
-	"lenslocked/middleware"
-	"lenslocked/models"
-	"lenslocked/rand"
 	"net/http"
+	"simplegallery/controllers"
+	"simplegallery/middleware"
+	"simplegallery/models"
+	"simplegallery/rand"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -17,7 +17,7 @@ const (
 	port     = 5432
 	user     = "postgres"
 	password = "1234"
-	dbname   = "lenslocked_dev"
+	dbname   = "simplegallery_dev"
 )
 
 func main() {

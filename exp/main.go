@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"lenslocked/models"
+	"simplegallery/models"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -12,7 +12,7 @@ const (
 	port     = 5432
 	user     = "postgres"
 	password = "1234"
-	dbname   = "lenslocked_dev"
+	dbname   = "simplegallery_dev"
 )
 
 func main() {

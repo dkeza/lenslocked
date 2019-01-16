@@ -5,10 +5,10 @@ import (
 	"errors"
 	"html/template"
 	"io"
-	"lenslocked/context"
 	"log"
 	"net/http"
 	"path/filepath"
+	"simplegallery/context"
 
 	"github.com/gorilla/csrf"
 )

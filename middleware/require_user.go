@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"lenslocked/context"
-	"lenslocked/models"
 	"net/http"
+	"simplegallery/context"
+	"simplegallery/models"
 )
 
 type User struct {

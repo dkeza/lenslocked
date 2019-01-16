@@ -1,9 +1,9 @@
 package models
 
 import (
-	"lenslocked/hash"
-	"lenslocked/rand"
 	"regexp"
+	"simplegallery/hash"
+	"simplegallery/rand"
 	"strings"
 
 	"github.com/jinzhu/gorm" // Import postgres driver

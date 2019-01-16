@@ -2,7 +2,7 @@ package context
 
 import (
 	"context"
-	"lenslocked/models"
+	"simplegallery/models"
 )
 
 const (

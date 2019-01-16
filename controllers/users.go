@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"lenslocked/models"
-	"lenslocked/rand"
-	"lenslocked/views"
 	"net/http"
+	"simplegallery/models"
+	"simplegallery/rand"
+	"simplegallery/views"
 )
 
 func NewUsers(us models.UserService) *Users {

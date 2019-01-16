@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"fmt"
-	"lenslocked/context"
-	"lenslocked/models"
-	"lenslocked/views"
 	"log"
 	"net/http"
+	"simplegallery/context"
+	"simplegallery/models"
+	"simplegallery/views"
 	"strconv"
 
 	"github.com/gorilla/mux"

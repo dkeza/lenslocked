@@ -1,8 +1,8 @@
 package views
 
 import (
-	"lenslocked/models"
 	"log"
+	"simplegallery/models"
 )
 
 const (

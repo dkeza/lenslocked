@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"lenslocked/views"
+	"simplegallery/views"
 )
 
 func NewStatic() *Static {
