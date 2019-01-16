@@ -50,7 +50,7 @@
   unused-packages = true
 
 [metadata.heroku]
-  root-package = "github.com/dkeza/simplegallery"
+  root-package = "simplegallery"
   go-version = "go1.11"
   ensure = "false"
   install = [ "./..." ]
