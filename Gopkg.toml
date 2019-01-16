@@ -48,3 +48,9 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[metadata.heroku]
+  root-package = "github.com/dkeza/simplegallery"
+  go-version = "go1.11"
+  ensure = "false"
+  install = [ "./..." ]
