@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"simplegallery/controllers"
 	"simplegallery/middleware"
 	"simplegallery/models"
@@ -13,25 +12,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "1234"
-	dbname   = "simplegallery_dev"
-)
-
 func main() {
-	psqlInfo := os.Getenv("DATABASE_URL")
-	if len(psqlInfo) == 0 {
-		psqlInfo = fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", user, password, host, port, dbname)
-	}
-	serverPort := os.Getenv("PORT")
-	if len(serverPort) == 0 {
-		serverPort = "3333"
-	}
+	cfg := DefaultConfig()
+	dbCfg := DefaultPostgresConfig()
 
-	services, err := models.NewServices(psqlInfo)
+	serverPort := cfg.GetPort()
+
+	services, err := models.NewServices(dbCfg.ConnectionInfo())
 	must(err)
 
 	defer services.Close()

@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm" // Import postgres driver
-	// Initialize postgres driver
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/crypto/bcrypt"
 )
 
