@@ -18,7 +18,14 @@ func main() {
 
 	serverPort := cfg.GetPort()
 
-	services, err := models.NewServices(dbCfg.ConnectionInfo())
+	services, err := models.NewServices(
+		models.WithGorm(dbCfg.ConnectionInfo()),
+		models.WithLogMode(!cfg.IsProd()),
+		models.WithUser(cfg.Pepper, cfg.HMACKey),
+		models.WithGallery(),
+		models.WithImage(),
+	)
+
 	must(err)
 
 	defer services.Close()

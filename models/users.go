@@ -10,9 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const usPasswordPepper = "some-secret"
-const hmacSecretKey = "hmac-secret"
-
 // User represents the user model stored in our database
 type User struct {
 	gorm.Model
@@ -49,7 +46,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(userFound.PasswordHash), []byte(password+usPasswordPepper))
+	err = bcrypt.CompareHashAndPassword([]byte(userFound.PasswordHash), []byte(password+us.pepper))
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
 		return nil, ErrorPasswordIncorrect
 	} else if err != nil {
@@ -59,12 +56,13 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 }
 
 // NewUserService creates new user service
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	ug := &userGorm{db}
-	hmac := hash.NewHMAC(hmacSecretKey)
-	uv := newUserValidator(ug, hmac)
+	hmac := hash.NewHMAC(hmacKey)
+	uv := newUserValidator(ug, hmac, pepper)
 	return &userService{
 		UserDB: uv,
+		pepper: pepper,
 	}
 }
 
@@ -72,6 +70,7 @@ var _ UserService = &userService{}
 
 type userService struct {
 	UserDB
+	pepper string
 }
 
 type userValFunc func(*User) error
@@ -87,11 +86,12 @@ func runUserValFuncs(user *User, fns ...userValFunc) error {
 
 var _ UserDB = &userValidator{}
 
-func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
+func newUserValidator(udb UserDB, hmac hash.HMAC, pepper string) *userValidator {
 	return &userValidator{
 		UserDB:     udb,
 		hmac:       hmac,
 		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
+		pepper:     pepper,
 	}
 }
 
@@ -99,6 +99,7 @@ type userValidator struct {
 	UserDB
 	hmac       hash.HMAC
 	emailRegex *regexp.Regexp
+	pepper     string
 }
 
 // ByEmail will normalize E-Mail address
@@ -183,7 +184,7 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 	if user.Password == "" {
 		return nil
 	}
-	hashedPassword := []byte(user.Password + usPasswordPepper)
+	hashedPassword := []byte(user.Password + uv.pepper)
 	hashedBytes, err := bcrypt.GenerateFromPassword(hashedPassword, bcrypt.DefaultCost)
 	if err != nil {
 		return err
