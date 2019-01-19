@@ -1,0 +1,13 @@
+{
+    "port": 3333,
+    "env": "dev",
+    "pepper": "some-secret",
+    "hmac_key": "hmac-secret",
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "1234",
+        "name": "simplegallery_dev"
+    }
+}

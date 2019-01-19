@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type PostgresConfig struct {
@@ -32,10 +34,11 @@ func DefaultPostgresConfig() PostgresConfig {
 }
 
 type Config struct {
-	Port    string `json:"port"`
-	Env     string `json:"env"`
-	Pepper  string `json:"pepper"`
-	HMACKey string `json:"hmac_key"`
+	Port     int            `json:"port"`
+	Env      string         `json:"env"`
+	Pepper   string         `json:"pepper"`
+	HMACKey  string         `json:"hmac_key"`
+	Database PostgresConfig `json:"database"`
 }
 
 func (c Config) IsProd() bool {
@@ -45,16 +48,36 @@ func (c Config) IsProd() bool {
 func (c Config) GetPort() string {
 	serverPort := os.Getenv("PORT")
 	if len(serverPort) == 0 {
-		serverPort = c.Port
+		serverPort = strconv.Itoa(c.Port)
 	}
 	return serverPort
 }
 
 func DefaultConfig() Config {
 	return Config{
-		Port:    "3333",
-		Env:     "dev",
-		Pepper:  "some-secret",
-		HMACKey: "hmac-secret",
+		Port:     3333,
+		Env:      "dev",
+		Pepper:   "some-secret",
+		HMACKey:  "hmac-secret",
+		Database: DefaultPostgresConfig(),
 	}
+}
+
+func LoadConfig(configReq bool) Config {
+	f, err := os.Open(".config")
+	if err != nil {
+		if configReq {
+			panic(err)
+		}
+		fmt.Println("Using default config...")
+		return DefaultConfig()
+	}
+	var c Config
+	dec := json.NewDecoder(f)
+	err = dec.Decode(&c)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Successfully loaded .config")
+	return c
 }

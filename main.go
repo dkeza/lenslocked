@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"simplegallery/controllers"
@@ -13,8 +14,11 @@ import (
 )
 
 func main() {
-	cfg := DefaultConfig()
-	dbCfg := DefaultPostgresConfig()
+	prod := flag.Bool("prod", false, "Set true in production, to force reading of .config file.")
+	flag.Parse()
+
+	cfg := LoadConfig(*prod)
+	dbCfg := cfg.Database
 
 	serverPort := cfg.GetPort()
 
