@@ -1,5 +1,5 @@
 simplegallery.kezic.net {
-    timeout 0
+    timeouts 0
     gzip
     proxy / localhost:3333 {
         transparent
