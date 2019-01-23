@@ -59,6 +59,7 @@ func main() {
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.HandleFunc("/login", usersC.Show).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
+	r.HandleFunc("/logout", requireUserMw.ApplyFn(usersC.Logout)).Methods("POST")
 
 	// Assets
 	assetHandler := http.FileServer(http.Dir("./assets/"))
