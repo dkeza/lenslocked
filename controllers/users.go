@@ -3,17 +3,19 @@ package controllers
 import (
 	"net/http"
 	"simplegallery/context"
+	"simplegallery/email"
 	"simplegallery/models"
 	"simplegallery/rand"
 	"simplegallery/views"
 	"time"
 )
 
-func NewUsers(us models.UserService) *Users {
+func NewUsers(us models.UserService, emailer *email.Client) *Users {
 	return &Users{
 		NewView:   views.NewView("bootstrap", "users/new"),
 		LoginView: views.NewView("bootstrap", "users/login"),
 		us:        us,
+		emailer:   emailer,
 	}
 }
 
@@ -22,6 +24,7 @@ type Users struct {
 	NewView   *views.View
 	LoginView *views.View
 	us        models.UserService
+	emailer   *email.Client
 }
 
 // New renders new user form
@@ -58,6 +61,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		u.NewView.Render(w, r, vd)
 		return
 	}
+	u.emailer.Welcome(user.Name, user.Email)
 	err := u.signIn(w, &user)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)

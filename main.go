@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"simplegallery/controllers"
+	"simplegallery/email"
 	"simplegallery/middleware"
 	"simplegallery/models"
 	"simplegallery/rand"
@@ -36,9 +37,15 @@ func main() {
 	//services.DestructiveReset()
 	services.AutoMigrate()
 
+	mgCfg := cfg.Mailgun
+	emailer := email.NewClient(
+		email.WithSender("SimpleGallery Support", "support@sandboxedbdc3b36f894f5b8edeb7c47e599964.mailgun.org"),
+		email.WithMailgun(mgCfg.Domain, mgCfg.APIKey, mgCfg.PublicAPIKey),
+	)
+
 	r := mux.NewRouter()
 	staticC := controllers.NewStatic()
-	usersC := controllers.NewUsers(services.User)
+	usersC := controllers.NewUsers(services.User, emailer)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
 	isProd := false

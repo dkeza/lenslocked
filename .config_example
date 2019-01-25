@@ -9,5 +9,10 @@
         "user": "postgres",
         "password": "1234",
         "name": "simplegallery_dev"
+    },
+    "mailgun": {
+        "api_key": "",
+        "public_api_key": "",
+        "domain": ""
     }
 }
