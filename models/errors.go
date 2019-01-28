@@ -21,6 +21,8 @@ const (
 	ErrPasswordRequired modelError = "models: password is required"
 	// ErrTitleRequired returns error
 	ErrTitleRequired modelError = "models: title is required"
+	// ErrTokenInvalid returns error
+	ErrTokenInvalid modelError = "models: token provided is not valid"
 	// ErrRememberRequired returns error
 	ErrRememberRequired privateError = "models: remember token is required"
 	// ErrRememberTooShort returns error

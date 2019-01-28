@@ -5,6 +5,7 @@ import (
 	"simplegallery/hash"
 	"simplegallery/rand"
 	"strings"
+	"time"
 
 	"github.com/jinzhu/gorm" // Import postgres driver
 	"golang.org/x/crypto/bcrypt"
@@ -37,6 +38,8 @@ type UserDB interface {
 // UserService is a set of methods used to manipulate and work with the user model
 type UserService interface {
 	Authenticate(email, password string) (*User, error)
+	InitiateReset(email string) (string, error)
+	CompleteReset(token, newPw string) (*User, error)
 	UserDB
 }
 
@@ -61,8 +64,9 @@ func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	hmac := hash.NewHMAC(hmacKey)
 	uv := newUserValidator(ug, hmac, pepper)
 	return &userService{
-		UserDB: uv,
-		pepper: pepper,
+		UserDB:    uv,
+		pepper:    pepper,
+		pwResetDB: newPwResetValidator(&pwResetGorm{db}, hmac),
 	}
 }
 
@@ -70,7 +74,46 @@ var _ UserService = &userService{}
 
 type userService struct {
 	UserDB
-	pepper string
+	pepper    string
+	pwResetDB pwResetDB
+}
+
+func (us *userService) InitiateReset(email string) (string, error) {
+	user, err := us.ByEmail(email)
+	if err != nil {
+		return "", err
+	}
+	pwr := pwReset{
+		UserID: user.ID,
+	}
+	if err := us.pwResetDB.Create(&pwr); err != nil {
+		return "", err
+	}
+	return pwr.Token, nil
+}
+
+func (us *userService) CompleteReset(token, newPw string) (*User, error) {
+	pwr, err := us.pwResetDB.ByToken(token)
+	if err != nil {
+		if err == ErrorNotFound {
+			return nil, ErrTokenInvalid
+		}
+		return nil, err
+	}
+	if time.Now().Sub(pwr.CreatedAt) > (12 * time.Hour) {
+		return nil, ErrTokenInvalid
+	}
+	user, err := us.ByID(pwr.UserID)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = newPw
+	err = us.Update(user)
+	if err != nil {
+		return nil, err
+	}
+	us.pwResetDB.Delete(pwr.ID)
+	return user, nil
 }
 
 type userValFunc func(*User) error
