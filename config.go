@@ -18,7 +18,7 @@ type PostgresConfig struct {
 func (c PostgresConfig) ConnectionInfo() string {
 	psqlInfo := os.Getenv("DATABASE_URL")
 	if len(psqlInfo) == 0 {
-		psqlInfo = fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", c.User, c.Password, c.Host, c.Port, c.Name)
+		psqlInfo = fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", c.User, c.Password, c.Host, c.Port, c.Name)
 	}
 	return psqlInfo
 }
