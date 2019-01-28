@@ -68,6 +68,9 @@ func (is *imageService) ByGalleryID(galleryID uint) ([]Image, error) {
 	}
 	ret := make([]Image, len(imgStrings))
 	for i := range imgStrings {
+		// Needed for Windows OS. Gives back \ instead of / in file path, and then is backslash url escaped by template.
+		// Then images aren't shown in browser, because url source is wrong.
+		imgStrings[i] = strings.Replace(imgStrings[i], `\`, `/`, -1)
 		imgStrings[i] = strings.Replace(imgStrings[i], path, "", 1)
 		ret[i] = Image{
 			Filename:  imgStrings[i],
