@@ -9,6 +9,9 @@
                 <div class="panel-body">
                     {{ template "resetPwForm" . }}
                 </div>
+                <div class="panel-footer">
+                    <a href="/forgot">Need to request a new token?</a>
+                </div>
             </div>
         </div>
     </div>
@@ -17,7 +20,7 @@
 
 {{ define "resetPwForm" }}
 
-    <form action="/resetPwForm" method="POST">
+    <form action="/reset" method="POST">
         {{csrfField}}
         <div class="form-group">
             <label for="token">Reset Token</label>

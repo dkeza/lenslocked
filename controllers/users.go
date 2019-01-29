@@ -163,9 +163,12 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 		u.ForgotPwView.Render(w, r, vd)
 		return
 	}
-
-	_ = token
-
+	err = u.emailer.ResetPw(form.Email, token)
+	if err != nil {
+		vd.SetAlert(err)
+		u.ForgotPwView.Render(w, r, vd)
+		return
+	}
 	views.RedirectAlert(w, r, "/reset", http.StatusFound, views.Alert{
 		Level:   views.AlertLvlSuccess,
 		Message: "Instructions for resetting your password have been emailed to you.",
