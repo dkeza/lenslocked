@@ -19,6 +19,7 @@ func main() {
 	flag.Parse()
 
 	cfg := LoadConfig(*prod)
+	fmt.Println(cfg.Dropbox)
 	dbCfg := cfg.Database
 
 	serverPort := cfg.GetPort()
