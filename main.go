@@ -10,6 +10,8 @@ import (
 	"simplegallery/models"
 	"simplegallery/rand"
 
+	"golang.org/x/oauth2"
+
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 )
@@ -19,7 +21,6 @@ func main() {
 	flag.Parse()
 
 	cfg := LoadConfig(*prod)
-	fmt.Println(cfg.Dropbox)
 	dbCfg := cfg.Database
 
 	serverPort := cfg.GetPort()
@@ -60,6 +61,29 @@ func main() {
 	requireUserMw := middleware.RequireUser{
 		User: userMw,
 	}
+
+	dbxOAuth := &oauth2.Config{
+		ClientID:     cfg.Dropbox.ID,
+		ClientSecret: cfg.Dropbox.Secret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  cfg.Dropbox.AuthURL,
+			TokenURL: cfg.Dropbox.TokenURL,
+		},
+		RedirectURL: "http://localhost:3333/oauth/dropbox/callback",
+	}
+
+	dbxRedirect := func(w http.ResponseWriter, r *http.Request) {
+		state := csrf.Token(r)
+		url := dbxOAuth.AuthCodeURL(state)
+		fmt.Println(state)
+		http.Redirect(w, r, url, http.StatusFound)
+	}
+	r.HandleFunc("/oauth/dropbox/connect", dbxRedirect)
+	dbxCallback := func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		fmt.Fprintln(w, r.FormValue("code"), " state: ", r.FormValue("state"))
+	}
+	r.HandleFunc("/oauth/dropbox/callback", dbxCallback)
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
