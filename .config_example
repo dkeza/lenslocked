@@ -14,7 +14,7 @@
         "api_key": "",
         "public_api_key": "",
         "domain": ""
-    ,}
+    },
     "dropbox": {
         "id" : "",
         "secret" : "",
