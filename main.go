@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"simplegallery/controllers"
 	"simplegallery/email"
@@ -132,6 +135,41 @@ func main() {
 		fmt.Fprintf(w, "%+v", token)
 	}
 	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(dbxCallback))
+
+	dbxQuery := func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		path := r.FormValue("path")
+
+		user := llctx.User(r.Context())
+		userOAuth, err := services.OAuth.Find(user.ID, models.OAuthDropbox)
+		if err != nil {
+			panic(err)
+		}
+		token := userOAuth.Token
+
+		data := struct {
+			Path string `json:"path"`
+		}{
+			Path: path,
+		}
+		dataBytes, err := json.Marshal(data)
+		if err != nil {
+			panic(err)
+		}
+		client := dbxOAuth.Client(context.TODO(), &token)
+		req, err := http.NewRequest(http.MethodPost, "https://api.dropboxapi.com/2/files/list_folder", bytes.NewReader(dataBytes))
+		if err != nil {
+			panic(err)
+		}
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+		io.Copy(w, resp.Body)
+	}
+	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(dbxQuery))
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
