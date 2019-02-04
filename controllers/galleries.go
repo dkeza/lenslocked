@@ -259,7 +259,7 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 	gallery, err := g.gs.ByID(uint(id))
 	if err != nil {
 		switch err {
-		case models.ErrorNotFound:
+		case models.ErrNotFound:
 			http.Error(w, "Gallery not found", http.StatusNotFound)
 		default:
 			log.Println(err)

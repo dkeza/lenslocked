@@ -3,8 +3,8 @@ package models
 import "strings"
 
 const (
-	// ErrorNotFound is default record not found error
-	ErrorNotFound modelError = "models: resource not found"
+	// ErrNotFound is default record not found error
+	ErrNotFound modelError = "models: resource not found"
 	// ErrIDInvalid is invalid id
 	ErrIDInvalid modelError = "models: invalid ID"
 	// ErrorPasswordIncorrect error

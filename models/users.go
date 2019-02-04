@@ -95,7 +95,7 @@ func (us *userService) InitiateReset(email string) (string, error) {
 func (us *userService) CompleteReset(token, newPw string) (*User, error) {
 	pwr, err := us.pwResetDB.ByToken(token)
 	if err != nil {
-		if err == ErrorNotFound {
+		if err == ErrNotFound {
 			return nil, ErrTokenInvalid
 		}
 		return nil, err
@@ -314,7 +314,7 @@ func (uv *userValidator) emailFormat(user *User) error {
 
 func (uv *userValidator) emailIsAvail(user *User) error {
 	existing, err := uv.ByEmail(user.Email)
-	if err == ErrorNotFound {
+	if err == ErrNotFound {
 		return nil
 	}
 	if err != nil {
@@ -401,7 +401,7 @@ func (ug *userGorm) Delete(id uint) error {
 func first(db *gorm.DB, dst interface{}) error {
 	err := db.First(dst).Error
 	if err == gorm.ErrRecordNotFound {
-		return ErrorNotFound
+		return ErrNotFound
 	}
 	return err
 }
