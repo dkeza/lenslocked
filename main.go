@@ -1,21 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	"simplegallery/controllers"
 	"simplegallery/email"
 	"simplegallery/middleware"
 	"simplegallery/models"
 	"simplegallery/rand"
-	"time"
-
-	llctx "simplegallery/context"
 
 	"golang.org/x/oauth2"
 
@@ -58,18 +51,6 @@ func main() {
 	usersC := controllers.NewUsers(services.User, emailer)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
-	isProd := false
-	b, err := rand.Bytes(32)
-	must(err)
-	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
-
-	userMw := middleware.User{
-		UserService: services.User,
-	}
-	requireUserMw := middleware.RequireUser{
-		User: userMw,
-	}
-
 	dbxOAuth := &oauth2.Config{
 		ClientID:     cfg.Dropbox.ID,
 		ClientSecret: cfg.Dropbox.Secret,
@@ -80,96 +61,17 @@ func main() {
 		RedirectURL: "http://localhost:3333/oauth/dropbox/callback",
 	}
 
-	dbxRedirect := func(w http.ResponseWriter, r *http.Request) {
-		state := csrf.Token(r)
-		cookie := http.Cookie{
-			Name:     "oauth_state",
-			Value:    state,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, &cookie)
-		url := dbxOAuth.AuthCodeURL(state)
-		http.Redirect(w, r, url, http.StatusFound)
-	}
-	r.HandleFunc("/oauth/dropbox/connect", requireUserMw.ApplyFn(dbxRedirect))
-	dbxCallback := func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		state := r.FormValue("state")
-		cookie, err := r.Cookie("oauth_state")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		} else if cookie == nil || cookie.Value != state {
-			http.Error(w, "Invalid state provided", http.StatusBadRequest)
-			return
-		}
-		cookie.Value = ""
-		cookie.Expires = time.Now()
-		http.SetCookie(w, cookie)
-		code := r.FormValue("code")
-		token, err := dbxOAuth.Exchange(context.TODO(), code)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		user := llctx.User(r.Context())
-		existing, err := services.OAuth.Find(user.ID, models.OAuthDropbox)
-		if err == models.ErrNotFound {
-			// noop
-		} else if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		} else {
-			services.OAuth.Delete(existing.ID)
-		}
-		userOAuth := models.OAuth{
-			UserID:  user.ID,
-			Token:   *token,
-			Service: models.OAuthDropbox,
-		}
-		err = services.OAuth.Create(&userOAuth)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprintf(w, "%+v", token)
-	}
-	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(dbxCallback))
+	oauthsC := controllers.NewOAuths(services.OAuth, dbxOAuth)
 
-	dbxQuery := func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		path := r.FormValue("path")
-
-		user := llctx.User(r.Context())
-		userOAuth, err := services.OAuth.Find(user.ID, models.OAuthDropbox)
-		if err != nil {
-			panic(err)
-		}
-		token := userOAuth.Token
-
-		data := struct {
-			Path string `json:"path"`
-		}{
-			Path: path,
-		}
-		dataBytes, err := json.Marshal(data)
-		if err != nil {
-			panic(err)
-		}
-		client := dbxOAuth.Client(context.TODO(), &token)
-		req, err := http.NewRequest(http.MethodPost, "https://api.dropboxapi.com/2/files/list_folder", bytes.NewReader(dataBytes))
-		if err != nil {
-			panic(err)
-		}
-		req.Header.Add("Content-Type", "application/json")
-		resp, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-		io.Copy(w, resp.Body)
+	b, err := rand.Bytes(32)
+	must(err)
+	csrfMw := csrf.Protect(b, csrf.Secure(cfg.IsProd()))
+	userMw := middleware.User{
+		UserService: services.User,
 	}
-	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(dbxQuery))
+	requireUserMw := middleware.RequireUser{
+		User: userMw,
+	}
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
@@ -182,6 +84,11 @@ func main() {
 	r.HandleFunc("/forgot", usersC.InitiateReset).Methods("POST")
 	r.HandleFunc("/reset", usersC.ResetPw).Methods("GET")
 	r.HandleFunc("/reset", usersC.CompleteReset).Methods("POST")
+
+	// OAuth Routes
+	r.HandleFunc("/oauth/dropbox/connect", requireUserMw.ApplyFn(oauthsC.DropboxConnect))
+	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(oauthsC.DropboxCallback))
+	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(oauthsC.DropboxTest))
 
 	// Assets
 	assetHandler := http.FileServer(http.Dir("./assets/"))
