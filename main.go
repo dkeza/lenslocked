@@ -51,7 +51,8 @@ func main() {
 	usersC := controllers.NewUsers(services.User, emailer)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
-	dbxOAuth := &oauth2.Config{
+	configs := make(map[string]*oauth2.Config)
+	configs[models.OAuthDropbox] = &oauth2.Config{
 		ClientID:     cfg.Dropbox.ID,
 		ClientSecret: cfg.Dropbox.Secret,
 		Endpoint: oauth2.Endpoint{
@@ -61,7 +62,7 @@ func main() {
 		RedirectURL: "http://localhost:3333/oauth/dropbox/callback",
 	}
 
-	oauthsC := controllers.NewOAuths(services.OAuth, dbxOAuth)
+	oauthsC := controllers.NewOAuths(services.OAuth, configs)
 
 	b, err := rand.Bytes(32)
 	must(err)
@@ -86,9 +87,9 @@ func main() {
 	r.HandleFunc("/reset", usersC.CompleteReset).Methods("POST")
 
 	// OAuth Routes
-	r.HandleFunc("/oauth/dropbox/connect", requireUserMw.ApplyFn(oauthsC.DropboxConnect))
-	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(oauthsC.DropboxCallback))
-	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(oauthsC.DropboxTest))
+	r.HandleFunc("/oauth/{service:[a-z]+}/connect", requireUserMw.ApplyFn(oauthsC.Connect))
+	r.HandleFunc("/oauth/{service:[a-z]+}/callback", requireUserMw.ApplyFn(oauthsC.Callback))
+	r.HandleFunc("/oauth/{service:[a-z]+}/test", requireUserMw.ApplyFn(oauthsC.DropboxTest))
 
 	// Assets
 	assetHandler := http.FileServer(http.Dir("./assets/"))
